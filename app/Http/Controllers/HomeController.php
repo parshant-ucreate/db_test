@@ -69,7 +69,7 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseSuperUser($db_name) {
-        $database['user'] = strtolower($this-generateRandomString().str_random(7));
+        $database['user'] = strtolower($this->generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']);
         $this->grantDbConnectPermission($db_name, $database['user']);
@@ -78,7 +78,7 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseNormalUser($db_name) {
-        $database['user'] = strtolower($this-generateRandomString().str_random(7));
+        $database['user'] = strtolower($this->generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']); 
         DB::select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['user'].";"); 
