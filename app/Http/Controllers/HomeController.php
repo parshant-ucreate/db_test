@@ -61,7 +61,8 @@ class HomeController extends Controller
             if($response){
                 $d = $this->createDatabaseSuperUser(strtolower(request()->name));
                 $a = $this->createDatabaseNormalUser(strtolower(request()->name));
-                echo '<pre>'; print_r($d); echo '<br>'; echo '<pre>'; print_r($a); die;
+                pr($d);
+                pr($a);
                 die;
             }
         }
@@ -87,8 +88,6 @@ class HomeController extends Controller
     }
 
     protected function createDbUser($user_name, $password) {
-        // echo "create user ".$user_name; echo '<br>'; 
-        // echo "ALTER USER ".$user_name." WITH PASSWORD '".$password."';"; die;
         DB::select("create user ".$user_name);
         return DB::select("ALTER USER ".$user_name." WITH PASSWORD '".$password."';"); 
     }
