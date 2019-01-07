@@ -24,6 +24,17 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
+    
+    public function generateRandomString($length = 7) {
+        $characters = 'abcdefghijklmnopqrstuvwxyz';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
     public function index() {
 	   $database_list =   $this->fetchAllDatabaseListWithSize();
        return view('home', compact('database_list'));
@@ -58,7 +69,7 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseSuperUser($db_name) {
-        $database['user'] = strtolower(str_random(15));
+        $database['user'] = strtolower($this-generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']);
         $this->grantDbConnectPermission($db_name, $database['user']);
@@ -67,7 +78,7 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseNormalUser($db_name) {
-        $database['user'] = strtolower(str_random(15));
+        $database['user'] = strtolower($this-generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']); 
         DB::select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['user'].";"); 
