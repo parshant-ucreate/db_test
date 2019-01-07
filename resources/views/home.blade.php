@@ -15,6 +15,13 @@
                     @endif
 
                     You are logged in!
+
+                    @foreach($database_list as $database )
+
+                    
+
+                    @endforeach
+
                 </div>
             </div>
         </div>
