@@ -41,7 +41,7 @@ class HomeController extends Controller
     public function create_database() {
         if (request()->isMethod('post')) {
             $validator = Validator::make(request()->all(), [
-                'name' => 'required|alpha_dash'
+                'name' => 'required|alpha_num'
             ]);
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput();
@@ -60,16 +60,16 @@ class HomeController extends Controller
     protected function createDatabaseSuperUser($db_name) {
         $database['user'] = str_random(10);
         $database['password'] = str_random(25);
-        DB::select('create user '.$database['user'].' with encrypted password '.$database['password'].';'); 
-        DB::select('grant all privileges on database '.$db_name.'to '.$database['user'].';'); 
+        DB::select("create user ".$database['user']." with encrypted password '".$database['password']."';"); 
+        DB::select("grant all privileges on database ".$db_name." to ".$database['user'].";"); 
         return $database;
     }
 
     protected function createDatabaseNormalUser($db_name) {
         $database['user'] = str_random(10);
         $database['password'] = str_random(25);
-        DB::select('create user '.$database['user'].' with encrypted password '.$database['password'].';'); 
-        DB::select('grant SELECT, INSERT, UPDATE privileges on database '.$db_name.'to '.$database['user'].';'); 
+        DB::select("create user ".$database['user']." with encrypted password ".$database['password'].";"); 
+        DB::select("grant SELECT, INSERT, UPDATE privileges on database ".$db_name." to ".$database['user'].";"); 
         return $database;
     }
 }
