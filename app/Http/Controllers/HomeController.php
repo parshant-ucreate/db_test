@@ -76,7 +76,7 @@ class HomeController extends Controller
     }
 
     protected function createDbUser($user_name, $password) {
-        return DB::select("create user ".$user_name." with encrypted password '".$password."';"); 
+        return DB::select("create user ".$user_name." with password '".$password."';"); 
     }
 
     protected function grantDbConnectPermission($db_name, $user_name) {
