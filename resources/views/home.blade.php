@@ -14,14 +14,14 @@
                         </div>
                     @endif
 
-                    You are logged in!
-
-                    @foreach($database_list as $database )
-
-                    
-
-                    @endforeach
-
+                    <ul class="list-group">
+                        @foreach($database_list as $database)
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{$database->name}}
+                            <span class="badge badge-primary badge-pill">{{$database->db_size}}</span>
+                          </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>

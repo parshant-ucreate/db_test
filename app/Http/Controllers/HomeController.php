@@ -26,8 +26,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-	   $database_list = DB::select('SELECT datname FROM pg_database WHERE datistemplate = false');   
-	   return view('home', compact('database_list'));
+	   $database_list = DB::select('select t1.datname AS name,  
+                                pg_size_pretty(pg_database_size(t1.datname)) as db_size
+                                from pg_database t1 WHERE datistemplate = false
+                                order by pg_database_size(t1.datname) desc;');   
+       return view('home', compact('database_list'));
     }
 
 
