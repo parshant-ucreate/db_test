@@ -68,7 +68,7 @@ class HomeController extends Controller
     protected function createDatabaseNormalUser($db_name) {
         $database['user'] = str_random(10);
         $database['password'] = str_random(25);
-        DB::select("create user ".$database['user']." with encrypted password ".$database['password'].";"); 
+        DB::select("create user ".$database['user']." with encrypted password '".$database['password']."';"); 
         DB::select("grant SELECT, INSERT, UPDATE privileges on database ".$db_name." to ".$database['user'].";"); 
         return $database;
     }
