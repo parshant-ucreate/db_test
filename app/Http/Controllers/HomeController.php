@@ -58,8 +58,8 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseSuperUser($db_name) {
-        $database['user'] = str_random(10);
-        $database['password'] = str_random(25);
+        $database['user'] = strtolower(str_random(15));
+        $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']);
         $this->grantDbConnectPermission($db_name, $database['user']);
         DB::select("grant all privileges on database ".$db_name." to ".$database['user'].";"); 
@@ -67,8 +67,8 @@ class HomeController extends Controller
     }
 
     protected function createDatabaseNormalUser($db_name) {
-        $database['user'] = str_random(10);
-        $database['password'] = str_random(25);
+        $database['user'] = strtolower(str_random(15));
+        $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['user'], $database['password']); 
         DB::select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['user'].";"); 
         $this->grantDbConnectPermission($db_name, $database['user']);
@@ -76,6 +76,8 @@ class HomeController extends Controller
     }
 
     protected function createDbUser($user_name, $password) {
+        // echo "create user ".$user_name; echo '<br>'; 
+        // echo "ALTER USER ".$user_name." WITH PASSWORD '".$password."';"; die;
         DB::select("create user ".$user_name);
         return DB::select("ALTER USER ".$user_name." WITH PASSWORD '".$password."';"); 
     }
