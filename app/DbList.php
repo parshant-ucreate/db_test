@@ -2,6 +2,7 @@
 
 namespace App;
 use Illuminate\Database\Eloquent\Model;
+use App\DbUser;
 
 class DbList extends Model
 {
@@ -15,4 +16,15 @@ class DbList extends Model
         'created_at', 'updated_at',
     ];
     
+    public function dbUser() {
+    	return $this->hasMany('App\DbUser', 'database_list_id', 'id')->select(['id', 'database_list_id', 'username', 'password', 'user_type']);
+    }
+
+    public static function isDbExists($db_name) {
+    	return static::where('name', $db_name)->pluck('id');
+    }
+
+    public static function getDbDetails($db_id) {
+    	return static::where('id', $db_id)->with('dbUser')->get();
+    }
 }

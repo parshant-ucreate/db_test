@@ -17,7 +17,7 @@
                     <ul class="list-group">
                         @foreach($database_list as $database)
                           <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{$database->name}}
+                            <a href="{{url($database->name.'/details')}}"> {{$database->name}} </a>
                             <span class="badge badge-primary">{{$database->db_size}}</span>
                             <a href="{{url('/drop_database/')}}"><span class="badge badge-danger">X</span></a>
                           </li>

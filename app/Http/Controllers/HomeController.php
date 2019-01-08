@@ -128,4 +128,12 @@ class HomeController extends Controller
     protected function dropDatabaseUser($db_name) {
         echo $db_name; die;
     }
+
+    public function dbDetails($db_name) {
+        $db_id = DbList::isDbExists($db_name);
+        if($db_id) {
+            $db_user = DbList::getDbDetails($db_id);
+            return view('db_details'); 
+        }
+    }
 }
