@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use DB;
 use Redirect;
+use App\DbList;
+use App\DbUser;
 
 class HomeController extends Controller
 {
@@ -59,31 +61,54 @@ class HomeController extends Controller
             }
             $response = DB::statement('CREATE DATABASE '.strtolower(request()->name));
             if($response){
-                $d = $this->createDatabaseSuperUser(strtolower(request()->name));
-                $a = $this->createDatabaseNormalUser(strtolower(request()->name));
-                pr($d);
-                pr($a);
-                die;
+                $db_id = $this->saveDatabaseNameIntoAppDb(strtolower(request()->name));
+                $db_user['admin'] = $this->createDatabaseSuperUser(strtolower(request()->name), $db_id->id);
+                $db_user['normal'] = $this->createDatabaseNormalUser(strtolower(request()->name), $db_id->id);
+                if($this->saveDatabaseUsersInfoIntoAppDb($db_user)){
+                    Redirect::to('home');
+                } else {
+                    echo 'Something went wrong'; die;
+                }
             }
         }
        return view('create_database');
     }
 
-    protected function createDatabaseSuperUser($db_name) {
-        $database['user'] = strtolower($this->generateRandomString().str_random(7));
+    protected function saveDatabaseNameIntoAppDb($db_name) {
+        return DbList::create([
+            'name' => $db_name,
+        ]);
+    }
+
+    protected function saveDatabaseUsersInfoIntoAppDb($users_info) {
+        if(!empty($users_info)) {
+            foreach ($users_info as $key => $value) {
+               DbUser::create($value);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected function createDatabaseSuperUser($db_name, $db_id) {
+        $database['username'] = strtolower($this->generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
-        $this->createDbUser($database['user'], $database['password']);
-        $this->grantDbConnectPermission($db_name, $database['user']);
-        DB::select("grant all privileges on database ".$db_name." to ".$database['user'].";"); 
+        $this->createDbUser($database['username'], $database['password']);
+        $this->grantDbConnectPermission($db_name, $database['username']);
+        DB::select("grant all privileges on database ".$db_name." to ".$database['username'].";");
+        $database['database_list_id'] = $db_id;
+        $database['user_type'] = 'admin';
         return $database;
     }
 
-    protected function createDatabaseNormalUser($db_name) {
-        $database['user'] = strtolower($this->generateRandomString().str_random(7));
+    protected function createDatabaseNormalUser($db_name, $db_id) {
+        $database['username'] = strtolower($this->generateRandomString().str_random(7));
         $database['password'] = strtolower(str_random(35));
-        $this->createDbUser($database['user'], $database['password']); 
-        DB::select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['user'].";"); 
-        $this->grantDbConnectPermission($db_name, $database['user']);
+        $this->createDbUser($database['username'], $database['password']); 
+        DB::select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['username'].";"); 
+        $this->grantDbConnectPermission($db_name, $database['username']);
+        $database['database_list_id'] = $db_id;
+        $database['user_type'] = 'user';
         return $database;
     }
 

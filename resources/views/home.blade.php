@@ -19,7 +19,7 @@
                           <li class="list-group-item d-flex justify-content-between align-items-center">
                             {{$database->name}}
                             <span class="badge badge-primary">{{$database->db_size}}</span>
-                            <a href="#"><span class="badge badge-danger">X</span></a>
+                            <a href="{{url('/drop_database')}}"><span class="badge badge-danger">X</span></a>
                           </li>
                         @endforeach
                     </ul>
