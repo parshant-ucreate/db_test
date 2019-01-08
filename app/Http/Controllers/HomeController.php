@@ -154,7 +154,7 @@ class HomeController extends Controller
         $db_id = DbList::isDbExists($db_name);
         if($db_id) {
             $db_user = DbList::getDbDetails($db_id);
-            return view('db_details'); 
+            return view('db_details', compact('db_user', 'db_name')); 
         }
     }
 }
