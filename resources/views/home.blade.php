@@ -19,7 +19,7 @@
                           <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a href="{{url($database->name.'/details')}}"> {{$database->name}} </a>
                             <span class="badge badge-primary">{{$database->db_size}}</span>
-                            <a href="{{url('/drop_database/')}}"><span class="badge badge-danger">X</span></a>
+                             <a onclick="return confirm('Are you sure you want to drop this database')" href="{{url('/drop_database/'.$database->name)}}"><span class="badge badge-danger">X</span></a>
                           </li>
                         @endforeach
                     </ul>

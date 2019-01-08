@@ -20,5 +20,5 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 Route::match(['get','post'],'/create_database', 'HomeController@createDatabase')->name('create_database');
-Route::get('/drop_database/{$db_name}', 'HomeController@dropDatabase')->name('drop_database');
+Route::get('/drop_database/{db_name}', 'HomeController@dropDatabase')->name('drop_database');
 Route::get('{db_name}/details', 'HomeController@dbDetails')->name('db_details');

@@ -122,8 +122,29 @@ class HomeController extends Controller
     }
 
     protected function dropDatabase($db_name) {
-        DB::select("DROP DATABASE ".$db_name.";");
+
+        $database_result = DbList::whereName($db_name)->with('DbUser')->first();
+
+        /*
+            Delete database
+            drop user/admin
+            delete users/databse from our database  
+        */      
+
+        $statement = "DROP DATABASE ".$db_name.";"."\n";
+
+        foreach ($database_result->DbUser as $key => $value) {
+            $statement .= "DROP USER ".$value->username.";"."\n";
+            $statement .= "DELETE FROM database_users where id = ".$value->id.";"."\n";
+        }
+        $statement .= "DELETE FROM database_list where name = ".$db_name.";"."\n";
+
+        echo $statement;
+        die;
+        DB::statement($statement);
     }
+
+   
 
     protected function dropDatabaseUser($db_name) {
         echo $db_name; die;
