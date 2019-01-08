@@ -49,7 +49,7 @@ class HomeController extends Controller
                         ); 
     }
 
-    public function create_database() {
+    public function createDatabase() {
         if (request()->isMethod('post')) {
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|alpha_num'
@@ -94,6 +94,10 @@ class HomeController extends Controller
 
     protected function grantDbConnectPermission($db_name, $user_name) {
         return DB::select("GRANT CONNECT ON DATABASE ".$db_name." TO ".$user_name.";"); 
+    }
+
+    protected function dropDatabase($db_name) {
+        DB::select("create user ".$user_name);
     }
 
 }
