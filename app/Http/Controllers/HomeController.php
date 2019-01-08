@@ -122,7 +122,10 @@ class HomeController extends Controller
     }
 
     protected function dropDatabase($db_name) {
-        DB::select("create user ".$user_name);
+        DB::select("DROP DATABASE ".$db_name.";");
     }
 
+    protected function dropDatabaseUser($db_name) {
+        echo $db_name; die;
+    }
 }
