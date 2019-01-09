@@ -42,7 +42,6 @@ class HomeController extends Controller
        return view('home', compact('database_list'));
     }
 
-
     protected function fetchAllDatabaseListWithSize() {
         return DB::select('select t1.datname AS name,  
                             pg_size_pretty(pg_database_size(t1.datname)) as db_size
@@ -64,13 +63,16 @@ class HomeController extends Controller
                 $db_id = $this->saveDatabaseNameIntoAppDb(strtolower(request()->name));
                 $db_user['admin'] = $this->createDatabaseSuperUser(strtolower(request()->name), $db_id->id);
                 $db_user['normal'] = $this->createDatabaseNormalUser(strtolower(request()->name), $db_id->id);
+                    
                 if($this->saveDatabaseUsersInfoIntoAppDb($db_user)){
-                    Redirect::to('home');
+                    
+                   return Redirect::to('/'.$db_id->name.'/details');
                 } else {
                     echo 'Something went wrong'; die;
                 }
             }
         }
+
        return view('create_database');
     }
 
@@ -118,6 +120,7 @@ class HomeController extends Controller
     }
 
     protected function grantDbConnectPermission($db_name, $user_name) {
+        DB::select("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM public;"); 
         return DB::select("GRANT CONNECT ON DATABASE ".$db_name." TO ".$user_name.";"); 
     }
 
@@ -125,29 +128,29 @@ class HomeController extends Controller
 
         $database_result = DbList::whereName($db_name)->with('DbUser')->first();
 
-        /*
-            Delete database
-            drop user/admin
-            delete users/databse from our database  
-        */      
-
-        $statement = "DROP DATABASE ".$db_name.";"."\n";
+        $user_ids = [];
 
         foreach ($database_result->DbUser as $key => $value) {
-            $statement .= "DROP USER ".$value->username.";"."\n";
-            $statement .= "DELETE FROM database_users where id = ".$value->id.";"."\n";
+
+            DB::statement("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM ".$value->username);
+            
+            if($value->user_type != 'admin'){
+                DB::statement("REVOKE SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public FROM ".$value->username);
+            }
+
+            DB::statement("DROP ROLE ".$value->username);
+            $user_ids[] = $value->id;
         }
-        $statement .= "DELETE FROM database_list where name = ".$db_name.";"."\n";
+        
+        DB::statement("DROP DATABASE ".$db_name);
 
-        echo $statement;
-        die;
-        DB::statement($statement);
-    }
+        if(count($user_ids)){
+            DbUser::destroy($user_ids);
+        }
 
-   
+        DbList::where('name', $db_name)->delete();
 
-    protected function dropDatabaseUser($db_name) {
-        echo $db_name; die;
+        return redirect()->route('home');
     }
 
     public function dbDetails($db_name) {
