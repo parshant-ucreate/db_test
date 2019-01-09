@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use DB;
 use Redirect;
+use Config;
 use App\DbList;
 use App\DbUser;
 
@@ -63,6 +64,7 @@ class HomeController extends Controller
                 $db_id = $this->saveDatabaseNameIntoAppDb(strtolower(request()->name));
                 $db_user['admin'] = $this->createDatabaseSuperUser(strtolower(request()->name), $db_id->id);
                 $db_user['normal'] = $this->createDatabaseNormalUser(strtolower(request()->name), $db_id->id);
+                $db_user['read'] = $this->createDatabaseReadonlyUser(strtolower(request()->name), $db_id->id);
                     
                 if($this->saveDatabaseUsersInfoIntoAppDb($db_user)){
                     
@@ -114,6 +116,21 @@ class HomeController extends Controller
         return $database;
     }
 
+    protected function createDatabaseReadonlyUser($db_name, $db_id) {
+        $database['username'] = strtolower($this->generateRandomString().str_random(7));
+        $database['password'] = strtolower(str_random(35));
+        $this->createDbUser($database['username'], $database['password']); 
+        $this->grantDbConnectPermission($db_name, $database['username']);
+        
+        $this->swicthDatabase($db_name);
+        
+        DB::connection('temp')->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ".$database['username'].";"); 
+        
+        $database['database_list_id'] = $db_id;
+        $database['user_type'] = 'readonly';
+        return $database;
+    }
+
     protected function createDbUser($user_name, $password) {
         DB::select("create user ".$user_name);
         return DB::select("ALTER USER ".$user_name." WITH PASSWORD '".$password."';"); 
@@ -159,5 +176,33 @@ class HomeController extends Controller
             $db_user = DbList::getDbDetails($db_id);
             return view('db_details', compact('db_user', 'db_name')); 
         }
+    } 
+
+
+    protected function swicthDatabase($db_name) {
+        
+        Config::set('database.connections.temp', array(
+                    'driver' => env('DB_CONNECTION'),
+                    'host' => env('DB_HOST'),
+                    'port' => env('DB_PORT'),
+                    'database' => $db_name,
+                    'username' => env('DB_USERNAME'),
+                    'password' => env('DB_PASSWORD'),
+                    'charset' => 'utf8',
+                    'prefix' => '',
+                    'prefix_indexes' => true,
+                    'schema' => 'public',
+                    'sslmode' => 'prefer',
+                ));
     }
+
+    protected function readOnlyUser() {
+        
+        // $dbconn3 = pg_connect("host=localhost port=5432 dbname=abc user=".env('DB_USERNAME')." password=".env('DB_PASSWORD'));
+        // $result = pg_query($dbconn3 , "GRANT SELECT ON ALL TABLES IN SCHEMA public to readuser");
+        
+        //dd($result);
+        die;
+    }
+
 }
