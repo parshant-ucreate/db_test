@@ -44,8 +44,7 @@ class HomeController extends Controller
     }
 
     protected function fetchAllDatabaseListWithSize() {
-        return DB::select('select t1.datname AS name,  
-                            pg_size_pretty(pg_database_size(t1.datname)) as db_size
+        return DB::select('SELECT t1.datname AS name,pg_size_pretty(pg_database_size(t1.datname)) as db_size
                             from pg_database t1 WHERE datistemplate = false
                             order by pg_database_size(t1.datname) desc;'
                         ); 
@@ -163,29 +162,42 @@ class HomeController extends Controller
             foreach ($dbUsers as $key => $value) {
                 if($value['user_type'] == 'readonly'){
                     $conn = $this->swicthDatabase($db_name,$owner['username'],$owner['password']);
-                    $conn->select("REVOKE USAGE ON SCHEMA public FROM ".$value['username'].";"); 
-                    $conn->select("REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM ".$value['username'].";"); 
-                    $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT ON TABLES FROM ".$value['username'].";"); 
+                    $this->revokeReadOnlyUserPrivileges($conn, $value['username']);
                     $this->closeTempConection();
                 }
                 
                 DB::statement("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM ".$value['username']);
                 
-                $conn = $this->swicthDatabase($db_name);
-                $conn->statement("SELECT oid, pg_encoding_to_char(encoding) AS encoding, datlastsysoid FROM pg_database WHERE datname='".$db_name."'");
-                $conn->statement("DROP OWNED BY ".$value['username']);
-                $conn->statement("DROP ROLE ".$value['username']);
-                $this->closeTempConection();
+                $this->dropUser($db_name,$value['username']);
+               
                 DbUser::destroy($value['id']);
             }
         }
        
-        DB::statement("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '".$db_name."';");
-        DB::statement("DROP DATABASE ".$db_name);
+        $this->dropDb($db_name,);
 
         DbList::where('name', $db_name)->delete();
 
         return redirect()->route('home');
+    }
+
+    protected function revokeReadOnlyUserPrivileges($conn, $username) {
+        $conn->select("REVOKE USAGE ON SCHEMA public FROM ".$username.";"); 
+        $conn->select("REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM ".$username.";"); 
+        $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT ON TABLES FROM ".$username.";"); 
+    }
+
+    protected function dropUser($db_name,$username) {
+        $conn = $this->swicthDatabase($db_name);
+        $conn->statement("SELECT oid, pg_encoding_to_char(encoding) AS encoding, datlastsysoid FROM pg_database WHERE datname='".$db_name."'");
+        $conn->statement("DROP OWNED BY ".$username);
+        $conn->statement("DROP ROLE ".$username);
+        $this->closeTempConection();
+    }
+
+    protected function dropDb($db_name) {
+        DB::statement("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '".$db_name."';");
+        DB::statement("DROP DATABASE ".$db_name);
     }
 
     public function dbDetails($db_name) {
