@@ -174,7 +174,7 @@ class HomeController extends Controller
             }
         }
        
-        $this->dropDb($db_name,);
+        $this->dropDb($db_name);
 
         DbList::where('name', $db_name)->delete();
 
@@ -242,5 +242,25 @@ class HomeController extends Controller
                     'sslmode' => 'prefer',
                 ));
         DB::disconnect('temp');
+    }
+
+    public function getDatabaseLogFiles($path) {
+        if(function_exists("scandir")) {
+            return scandir($path);
+        } else {
+            $dh  = opendir($path);
+            while (false !== ($filename = readdir($dh)))
+                $files[] = $filename;
+            return $files;
+        }
+    }
+
+    public function showDatabaseLogs() {
+        $log_files = $this->getDatabaseLogFiles(getenv('DATABASE_LOGS_DIRECTORY'));
+        $log_file_url = "";
+        if($log_files[2]) {
+            $log_file_url = getenv('DATABASE_LOGS_DIRECTORY').$log_files[2]; 
+        }
+        return view('db_log', compact('log_file_url'));
     }
 }
