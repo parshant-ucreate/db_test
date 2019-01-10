@@ -110,10 +110,6 @@ class HomeController extends Controller
         $database['password'] = strtolower(str_random(35));
         $this->createDbUser($database['username'], $database['password']); 
         $this->grantDbConnectPermission($db_name, $database['username']);
-        
-        //$conn = $this->swicthDatabase($db_name);
-        //$conn->select("grant SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to ".$database['username'].";"); 
-        //$this->closeTempConection();
 
         $database['database_list_id'] = $db_id;
         $database['user_type'] = 'user';
@@ -137,23 +133,6 @@ class HomeController extends Controller
         return $database;
     }
 
-    public function createReadOnly($db_name) {
-    /*  $database['username'] = strtolower($this->generateRandomString().str_random(7));
-        $database['password'] = strtolower(str_random(35));
-        $conn = $this->swicthDatabase($db_name);
-
-        dd($conn);
-
-        $this->createDbUser($database['username'], $database['password']); 
-        $this->grantDbConnectPermission($db_name, $database['username']);   
-        
-        $conn->select("GRANT USAGE ON SCHEMA public TO ".$database['username'].";"); 
-        $conn->select("GRANT SELECT ON ALL TABLES IN SCHEMA public TO ".$database['username'].";"); 
-        $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ".$database['username'].";"); 
-        pr($database);*/
-       die('here');
-    }
-
     protected function createDbUser($user_name, $password) {
         DB::select("create user ".$user_name);
         return DB::select("ALTER USER ".$user_name." WITH PASSWORD '".$password."';"); 
@@ -169,24 +148,40 @@ class HomeController extends Controller
         $database_result = DbList::whereName($db_name)->with('DbUser')->first();
 
         $user_ids = [];
+        $dbUsers = ObjectToArray($database_result->DbUser);
 
-        foreach ($database_result->DbUser as $key => $value) {
-
-            DB::statement("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM ".$value->username);
-            
-            if($value->user_type != 'admin'){
-                DB::statement("REVOKE SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public FROM ".$value->username);
+        if(count($dbUsers)){
+            foreach ($dbUsers as $key => $value) {
+                 if($value['user_type'] == 'user'){
+                    $owner['username'] = $value['username'];
+                    $owner['password'] = $value['password'];
+                }
             }
+            
+            rsort($dbUsers);
 
-            DB::statement("DROP ROLE ".$value->username);
-            $user_ids[] = $value->id;
+            foreach ($dbUsers as $key => $value) {
+                if($value['user_type'] == 'readonly'){
+                    $conn = $this->swicthDatabase($db_name,$owner['username'],$owner['password']);
+                    $conn->select("REVOKE USAGE ON SCHEMA public FROM ".$value['username'].";"); 
+                    $conn->select("REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM ".$value['username'].";"); 
+                    $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT ON TABLES FROM ".$value['username'].";"); 
+                    $this->closeTempConection();
+                }
+                
+                DB::statement("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM ".$value['username']);
+                
+                $conn = $this->swicthDatabase($db_name);
+                $conn->statement("SELECT oid, pg_encoding_to_char(encoding) AS encoding, datlastsysoid FROM pg_database WHERE datname='".$db_name."'");
+                $conn->statement("DROP OWNED BY ".$value['username']);
+                $conn->statement("DROP ROLE ".$value['username']);
+                $this->closeTempConection();
+                DbUser::destroy($value['id']);
+            }
         }
-        
+       
+        DB::statement("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '".$db_name."';");
         DB::statement("DROP DATABASE ".$db_name);
-
-        if(count($user_ids)){
-            DbUser::destroy($user_ids);
-        }
 
         DbList::where('name', $db_name)->delete();
 
