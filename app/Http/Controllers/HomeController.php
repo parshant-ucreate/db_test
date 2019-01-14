@@ -202,11 +202,6 @@ class HomeController extends Controller
 
     public function dbDetails($db_name) {
         $db_user = DbList::where('name', $db_name)->with('dbUser')->firstOrFail();
-
-        $tables = DB::statement("SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_schema='public';".$db_name);
-
-        dd($tables);
-
         return view('db_details', compact('db_user', 'db_name')); 
     } 
 
