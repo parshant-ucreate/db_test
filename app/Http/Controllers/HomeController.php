@@ -201,11 +201,8 @@ class HomeController extends Controller
     }
 
     public function dbDetails($db_name) {
-        $db_id = DbList::isDbExists($db_name);
-        if($db_id) {
-            $db_user = DbList::getDbDetails($db_id);
-            return view('db_details', compact('db_user', 'db_name')); 
-        }
+        $db_user = DbList::where('name', $db_name)->with('dbUser')->firstOrFail();
+        return view('db_details', compact('db_user', 'db_name')); 
     } 
 
     protected function swicthDatabase($db_name, $username = null,$password = null) {
@@ -263,4 +260,15 @@ class HomeController extends Controller
         }
         return view('db_log', compact('log_file_url'));
     }
+
+    protected function backupDatabase($db_name) {
+        
+        if (!is_dir(env('BACKUP_DIRECTORY'))) {
+            mkdir(env('BACKUP_DIRECTORY'));         
+        }
+      
+        dd($db_name);
+        return redirect()->route('db_details',$db_name);
+    }
+
 }

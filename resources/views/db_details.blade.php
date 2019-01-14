@@ -9,7 +9,7 @@
 
                 <div class="card-body">
                     <ul class="list-group">
-                        @foreach($db_user[0]['dbUser'] as $user)
+                        @foreach($db_user->dbUser as $user)
                           <li class="list-group-item justify-content-between align-items-center">
                           <p><span>Username : </span>{{$user->username}}</p>
                           <p><span>Password : </span>{{$user->password}}</p>
@@ -19,6 +19,11 @@
                         @endforeach
                     </ul>
                 </div>
+
+                <div class="card-footer">
+                  <a class="btn btn-primary" href="{{ route('backup_database' , $db_name ) }}">Download dump</a>
+                </div>
+
             </div>
         </div>
     </div>
