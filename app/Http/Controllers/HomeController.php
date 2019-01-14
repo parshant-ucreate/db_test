@@ -202,6 +202,11 @@ class HomeController extends Controller
 
     public function dbDetails($db_name) {
         $db_user = DbList::where('name', $db_name)->with('dbUser')->firstOrFail();
+
+        $tables = DB::statement("SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_schema='public';".$db_name);
+
+        dd($tables);
+
         return view('db_details', compact('db_user', 'db_name')); 
     } 
 
@@ -263,10 +268,21 @@ class HomeController extends Controller
 
     protected function backupDatabase($db_name) {
         if (!is_dir('db_backup/')) {
-            mkdir(env('db_backup'));         
+            mkdir('db_backup');         
         }
-        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@127.0.0.1:5432/'.$db_name.' > db_backup/'.$db_name.'_'.time().'.sql',$output);
+        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' > db_backup/'.$db_name.'_'.time().'.sql',$output);
         return redirect()->route('db_details',$db_name);
+    }
+
+    protected function importDatabase($db_name) {
+        $success = false;
+        if (request()->isMethod('post')) {
+            request()->validate(['file' => 'required' ]); 
+            $file = request()->file('file')->getPathName();
+            exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file,$output);
+            $success = true;
+        }
+        return view('import_database', compact('db_name','success'));
     }
 
 }
