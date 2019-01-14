@@ -262,12 +262,10 @@ class HomeController extends Controller
     }
 
     protected function backupDatabase($db_name) {
-        
-        if (!is_dir(env('BACKUP_DIRECTORY'))) {
-            mkdir(env('BACKUP_DIRECTORY'));         
+        if (!is_dir('db_backup/')) {
+            mkdir(env('db_backup'));         
         }
-      
-        dd($db_name);
+        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@127.0.0.1:5432/'.$db_name.' > db_backup/'.$db_name.'_'.time().'.sql',$output);
         return redirect()->route('db_details',$db_name);
     }
 
