@@ -9,6 +9,8 @@ use Redirect;
 use Config;
 use App\DbList;
 use App\DbUser;
+use Illuminate\Support\Facades\Storage;
+
 
 class HomeController extends Controller
 {
@@ -265,12 +267,18 @@ class HomeController extends Controller
         if (!is_dir('db_backup/')) {
             mkdir('db_backup');         
         }
-        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' > db_backup/'.$db_name.'_'.time().'.sql',$output);
+        $fileName = $db_name.'_'.time().'.sql';
+        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' > db_backup/'.$fileName .' 2>&1' ,$output);
+            
+        $s3 = Storage::disk('s3');
+        $filePath = $db_name.'/' . $fileName;
+        $res = $s3->put($filePath, file_get_contents('db_backup/'.$fileName));
         return redirect()->route('db_details',$db_name);
     }
 
     protected function importDatabase($db_name) {
         $success = false;
+
         if (request()->isMethod('post')) {
             request()->validate(['file' => 'required' ]); 
             $file = request()->file('file')->getPathName();
