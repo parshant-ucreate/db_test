@@ -25,3 +25,4 @@ Route::get('{db_name}/details', 'HomeController@dbDetails')->name('db_details');
 Route::get('db/logs', 'HomeController@showDatabaseLogs')->name('db_logs');
 Route::get('{db_name}/backup', 'HomeController@backupDatabase')->name('backup_database');
 Route::match(['get','post'],'{db_name}/import', 'HomeController@importDatabase')->name('import_database');
+Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');

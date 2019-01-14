@@ -12,7 +12,8 @@
         "fideloper/proxy": "^4.0",
         "josh/laravel-terminal": "dev-develop",
         "laravel/framework": "5.8.*",
-        "laravel/tinker": "^1.0"
+        "laravel/tinker": "^1.0",
+        "rap2hpoutre/laravel-log-viewer": "^1.0"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",
