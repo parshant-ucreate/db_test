@@ -42,9 +42,9 @@ class RunDatabaseBackup implements ShouldQueue
             mkdir("db_backup", 0777);
             umask($oldmask);
         }
+        Log::info('Dump Staring for '.$this->db->name);
         
         $fileName = $this->db->name.'_'.time().'.sql';
-        //Log::info($this->type);
         exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$this->db->name.' > db_backup/'.$fileName .' 2>&1' ,$output);
          
         //save in to local database
@@ -57,5 +57,7 @@ class RunDatabaseBackup implements ShouldQueue
 
         //remove file from server
         unlink('db_backup/'.$fileName);
+        Log::info('Dump Completed for '.$this->db->name);
+
     }
 }
