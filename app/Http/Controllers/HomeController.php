@@ -43,7 +43,8 @@ class HomeController extends Controller
 
     public function index() {
 	   $database_list =   $this->fetchAllDatabaseListWithSize();
-       return view('home', compact('database_list'));
+       $list = DbList::all()->pluck('name')->toArray();
+       return view('home', compact('database_list','list'));
     }
 
     protected function fetchAllDatabaseListWithSize() {
