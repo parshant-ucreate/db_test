@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\DbList;
+use App\Jobs\RunDatabaseBackup;
 
 class Kernel extends ConsoleKernel
 {
@@ -26,6 +28,11 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')
         //          ->hourly();
+
+        $database_list = DbList::get();
+        foreach ($database_list as $key => $db) {
+            $schedule->job(new RunDatabaseBackup($db))->cron('*/'.$db->backp_time.' * * * *');
+        }
     }
 
     /**

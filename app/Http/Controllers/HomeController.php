@@ -274,20 +274,8 @@ class HomeController extends Controller
 
         $db = DbList::where('name', $db_name)->firstOrFail();
 
-        $fileName = $db_name.'_'.time().'.sql';
-        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' > db_backup/'.$fileName .' 2>&1' ,$output);
-         
-        //save in to local database
-        DbBackup::create(['filename' => $fileName, 'database_list_id' => $db->id, 'type' => 'manual']);
-
-        //Move to S3
-        $s3 = Storage::disk('s3');
-        $filePath = $db_name.'/' . $fileName;
-        $res = $s3->put($filePath, file_get_contents('db_backup/'.$fileName));
-
-        //remove file from server
-        unlink('db_backup/'.$fileName);
-
+        RunDatabaseBackup::dispatch($db,'manual');
+  
         return redirect()->route('db_details',$db_name);
     }
 
@@ -304,7 +292,6 @@ class HomeController extends Controller
     }
 
     protected function backupDatabaseCron() {
-        RunDatabaseBackup::dispatch();
         dd('complete');
     }
 
@@ -318,5 +305,4 @@ class HomeController extends Controller
         }
         return view('db_interval', compact('db','dbdetails'));
     }
-
 }
