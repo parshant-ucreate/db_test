@@ -16,8 +16,8 @@
                             <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('Minutes') }}</label>
 
                             <div class="col-md-6">
-                                <input id="backp_time" type="number" required min="1" max="45000" class="form-control{{ $errors->has('backp_time') ? ' is-invalid' : '' }}" name="backp_time" value="{{ $dbdetails->backp_time }}" autofocus>
-
+                                <input id="backp_time" type="number" required min="0" class="form-control{{ $errors->has('backp_time') ? ' is-invalid' : '' }}" name="backp_time" value="{{ $dbdetails->backp_time }}" autofocus>
+                                <span class="form-text text-muted">0 to stop the autometic backup</span>
                                 @if ($errors->has('backp_time'))
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $errors->first('backp_time') }}</strong>

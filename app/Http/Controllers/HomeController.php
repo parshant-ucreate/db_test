@@ -298,7 +298,7 @@ class HomeController extends Controller
     protected function backupInterval($db) {
         $dbdetails = DbList::findOrFail($db);
         if (request()->isMethod('post')) {
-            request()->validate([ 'backp_time' => 'required|numeric|min:1' ]);
+            request()->validate([ 'backp_time' => 'required|numeric|min:0' ]);
             $dbdetails->backp_time = request()->backp_time;
             $dbdetails->save();
             return redirect()->route('db_details',$dbdetails->name); 

@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')
         //          ->hourly();
 
-        $database_list = DbList::get();
+        $database_list = DbList::where('backp_time','>',0)->get();
         foreach ($database_list as $key => $db) {
             $schedule->job(new RunDatabaseBackup($db))->cron('*/'.$db->backp_time.' * * * *');
         }
