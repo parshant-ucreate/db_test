@@ -28,3 +28,5 @@ Route::match(['get','post'],'{db_name}/import', 'HomeController@importDatabase')
 Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
 
 Route::get('cron_backup', 'HomeController@backupDatabaseCron')->name('cron_backup');
+
+Route::match(['get','post'],'/backup_interval/{db}', 'HomeController@backupInterval')->name('backup_interval');

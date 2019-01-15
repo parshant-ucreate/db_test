@@ -302,9 +302,20 @@ class HomeController extends Controller
         return view('import_database', compact('db_name','success'));
     }
 
-     protected function backupDatabaseCron() {
+    protected function backupDatabaseCron() {
         RunDatabaseBackup::dispatch();
         dd('complete');
+    }
+
+    protected function backupInterval($db) {
+        $dbdetails = DbList::findOrFail($db);
+        if (request()->isMethod('post')) {
+            request()->validate([ 'backp_time' => 'required|numeric|min:1' ]);
+            $dbdetails->backp_time = request()->backp_time;
+            $dbdetails->save();
+            return redirect()->route('db_details',$dbdetails->name); 
+        }
+        return view('db_interval', compact('db','dbdetails'));
     }
 
 }
