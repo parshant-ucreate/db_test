@@ -17,14 +17,14 @@
                         @csrf
 
                         <div class="form-group row">
-                            <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('Upload File') }}</label>
+                            <label for="url" class="col-md-4 col-form-label text-md-right">{{ __('Backup Url') }}</label>
 
                             <div class="col-md-6">
-                                <input id="file" type="file" accept=".sql" class="form-control{{ $errors->has('file') ? ' is-invalid' : '' }}" name="file" value="" required autofocus>
+                                <input id="url" type="url" class="form-control{{ $errors->has('url') ? ' is-invalid' : '' }}" name="url" value="" required autofocus>
 
-                                @if ($errors->has('file'))
+                                @if ($errors->has('url'))
                                     <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $errors->first('file') }}</strong>
+                                        <strong>{{ $errors->first('url') }}</strong>
                                     </span>
                                 @endif
                             </div>

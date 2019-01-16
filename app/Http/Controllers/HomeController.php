@@ -283,7 +283,9 @@ class HomeController extends Controller
         $success = false;
 
         if (request()->isMethod('post')) {
-            request()->validate(['file' => 'required' ]); 
+            request()->validate(['url' => 'required|url' ]); 
+
+            dd('here');
             $file = request()->file('file')->getPathName();
 
             $this->dropAllTables($db_name);
