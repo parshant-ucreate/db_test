@@ -285,10 +285,31 @@ class HomeController extends Controller
         if (request()->isMethod('post')) {
             request()->validate(['file' => 'required' ]); 
             $file = request()->file('file')->getPathName();
+
+            $this->dropAllTables($db_name);
+
             exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file,$output);
             $success = true;
         }
         return view('import_database', compact('db_name','success'));
+    }
+
+    protected function dropAllTables($db_name) {
+        $conn = $this->swicthDatabase($db_name);
+        $tables = $this->selectAllTables($db_name);
+
+        dd($conn);
+        if(count($tables)){
+            $conn->select("DROP TABLE ".implode(',',$tables)." CASCADE");
+        }
+        $this->closeTempConection();
+    }
+
+    protected function selectAllTables($db_name) {
+        $conn = $this->swicthDatabase($db_name);
+        $tables = ObjectToArray($conn->select("SELECT tablename FROM pg_tables WHERE schemaname='public'"));
+        $this->closeTempConection();
+        return array_column($tables,'tablename');
     }
 
     protected function backupDatabaseCron() {

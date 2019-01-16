@@ -29,6 +29,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')
         //          ->hourly();
 
+        $schedule->call(function () {
+           exec("pgbadger --prefix '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ' /var/log/postgresql/postgresql-10-main.log  -o ".public_path()."/ab.html");
+        })->everyFifteenMinutes();
+
+
         $database_list = DbList::where('backp_time','>',0)->get();
         foreach ($database_list as $key => $db) {
             $schedule->job(new RunDatabaseBackup($db))->cron('*/'.$db->backp_time.' * * * *');
