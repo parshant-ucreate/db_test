@@ -26,7 +26,6 @@ Route::get('db/logs', 'HomeController@showDatabaseLogs')->name('db_logs');
 Route::get('{db_name}/backup', 'HomeController@backupDatabase')->name('backup_database');
 Route::match(['get','post'],'{db_name}/import', 'HomeController@importDatabase')->name('import_database');
 Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
-
 Route::get('cron_backup', 'HomeController@backupDatabaseCron')->name('cron_backup');
-
+Route::get('db/reports', 'HomeController@getDbReports')->name('db_reports');
 Route::match(['get','post'],'/backup_interval/{db}', 'HomeController@backupInterval')->name('backup_interval');

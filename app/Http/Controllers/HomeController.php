@@ -326,4 +326,9 @@ class HomeController extends Controller
         }
         return view('db_interval', compact('db','dbdetails'));
     }
+
+    public function getDbReports() {
+        $db_reports_html = file_get_contents(public_path().'/db_logs.html');
+        return view('db_reports', compact('db_reports_html'));     
+    }
 }

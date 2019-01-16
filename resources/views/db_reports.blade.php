@@ -1,0 +1,1 @@
+{!! $db_reports_html !!}

@@ -26,13 +26,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
-
         $schedule->call(function () {
-           exec("pgbadger --prefix '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ' /var/log/postgresql/postgresql-10-main.log  -o ".public_path()."/ab.html");
+           exec("pgbadger --prefix '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ' /var/log/postgresql/postgresql-10-main.log  -o ".public_path()."/db_logs.html");
         })->everyFifteenMinutes();
-
 
         $database_list = DbList::where('backp_time','>',0)->get();
         foreach ($database_list as $key => $db) {
@@ -48,7 +44,6 @@ class Kernel extends ConsoleKernel
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
     }
 }
