@@ -21,7 +21,7 @@
 
                 <div class="card-footer">
                   <a class="btn btn-primary" href="{{ route('backup_database' , $db_name ) }}">Download dump</a>
-                  <a class="btn btn-primary" href="{{ route('import_database' , $db_name ) }}">Import database</a>
+                  <a class="btn btn-primary" href="{{ route('import_database' , $db_name ) }}">Restore database</a>
                   <a class="btn btn-primary" href="{{ route('backup_interval' , $db_user->id ) }}">Backup Interval</a>
                 </div>
 

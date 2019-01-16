@@ -295,10 +295,8 @@ class HomeController extends Controller
     }
 
     protected function dropAllTables($db_name) {
-        $conn = $this->swicthDatabase($db_name);
         $tables = $this->selectAllTables($db_name);
-
-        dd($conn);
+        $conn = $this->swicthDatabase($db_name);
         if(count($tables)){
             $conn->select("DROP TABLE ".implode(',',$tables)." CASCADE");
         }

@@ -6,11 +6,11 @@
         <div class="col-md-8">
             @if ($success)
                 <div class="alert alert-success alert-dismissable">
-                    Databse import Successfuly! 
+                    Databse Restore Successfuly! 
                 </div>
              @endif
             <div class="card">
-                <div class="card-header">{{ __('Import Database') }}</div>
+                <div class="card-header">{{ __('Restore Database') }}</div>
 
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" action="{{ route('import_database',$db_name) }}">
@@ -33,7 +33,7 @@
                         <div class="form-group row mb-0">
                             <div class="col-md-8 offset-md-4">
                                 <button type="submit" class="btn btn-primary">
-                                    {{ __('Import Database') }}
+                                    {{ __('Restore Database') }}
                                 </button>
 
                             </div>
