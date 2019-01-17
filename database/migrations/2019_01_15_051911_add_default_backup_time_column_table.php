@@ -14,7 +14,7 @@ class AddDefaultBackupTimeColumnTable extends Migration
     public function up()
     {
         Schema::table('database_list', function (Blueprint $table) {
-            $table->integer('backp_time')->default(env('BACKUP_DEFAULT_TIME',240))->comment('time in minutes like 5 or 60'); 
+            $table->integer('backp_time')->default(env('BACKUP_DEFAULT_TIME',0))->comment('time in minutes like 5 or 60'); 
         });
     }
 
