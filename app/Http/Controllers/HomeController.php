@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use DB;
 use Redirect;
+use Carbon\Carbon;
 use Config;
 use App\DbList;
 use App\DbUser;
@@ -281,17 +282,20 @@ class HomeController extends Controller
 
     protected function importDatabase($db_name) {
         $success = false;
-
         if (request()->isMethod('post')) {
             request()->validate(['url' => 'required|url' ]); 
-
-            dd('here');
-            $file = request()->file('file')->getPathName();
-
-            $this->dropAllTables($db_name);
-
-            exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file,$output);
-            $success = true;
+            $filename= last(explode('/', request()->url));
+            $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
+            $exists = Storage::disk('s3')->exists($url);
+            if($exists){
+                $file =  Storage::disk('s3')->get($url);
+                Storage::append($filename, $file);
+                $path = Storage::path($filename);
+                $this->dropAllTables($db_name);
+                exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+                Storage::delete($filename);
+                $success = true;
+            }
         }
         return view('import_database', compact('db_name','success'));
     }
