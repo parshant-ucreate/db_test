@@ -11,22 +11,22 @@
              @endif
             <div class="card">
                 <div class="card-header">{{ __('Restore Database') }}
-                    <a href="{{ route('import_file',$db_name)}}" style="float: right;">{{ __('Backup File') }}</a>
+                    <a href="{{ route('import_database',$db_name)}}" style="float: right;">{{ __('Backup Url') }}</a>
                 </div>
 
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" action="{{ route('import_database',$db_name) }}">
+                    <form method="POST" enctype="multipart/form-data" action="{{ route('import_file',$db_name) }}">
                         @csrf
 
                         <div class="form-group row">
-                            <label for="url" class="col-md-4 col-form-label text-md-right">{{ __('Backup Url') }}</label>
+                            <label for="file" class="col-md-4 col-form-label text-md-right">{{ __('Backup File') }}</label>
 
                             <div class="col-md-6">
-                                <input id="url" type="url" class="form-control{{ $errors->has('url') ? ' is-invalid' : '' }}" name="url" value="" required autofocus>
+                                <input id="file" type="file" accept=".sql,.dump" class="form-control{{ $errors->has('file') ? ' is-invalid' : '' }}" name="file" value="" required autofocus>
 
-                                @if ($errors->has('url'))
+                                @if ($errors->has('file'))
                                     <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $errors->first('url') }}</strong>
+                                        <strong>{{ $errors->first('file') }}</strong>
                                     </span>
                                 @endif
                             </div>

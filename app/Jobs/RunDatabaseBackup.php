@@ -44,8 +44,9 @@ class RunDatabaseBackup implements ShouldQueue
         }
         Log::info('Dump Staring for '.$this->db->name);
         
-        $fileName = $this->db->name.'_'.time().'.sql';
-        exec('pg_dump --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$this->db->name.' > db_backup/'.$fileName .' 2>&1' ,$output);
+        $fileName = $this->db->name.'_'.time().'.dump';
+       
+        exec('pg_dump -b -F c --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$this->db->name.' > db_backup/'.$fileName .' 2>&1' ,$output);
          
         //save in to local database
         DbBackup::create(['filename' => $fileName, 'database_list_id' => $this->db->id, 'type' => $this->type ]);

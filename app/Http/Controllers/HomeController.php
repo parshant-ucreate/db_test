@@ -284,7 +284,8 @@ class HomeController extends Controller
         $success = false;
         if (request()->isMethod('post')) {
             request()->validate(['url' => 'required|url' ]); 
-            $filename= last(explode('/', request()->url));
+            $filename = last(explode('/', request()->url));
+            $ext = last(explode('.', $filename));
             $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
             $exists = Storage::disk('s3')->exists($url);
             if($exists){
@@ -292,12 +293,31 @@ class HomeController extends Controller
                 Storage::append($filename, $file);
                 $path = Storage::path($filename);
                 $this->dropAllTables($db_name);
-                exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+                if($ext == 'sql'){
+                    exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+                }
+                exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
                 Storage::delete($filename);
                 $success = true;
             }
         }
         return view('import_database', compact('db_name','success'));
+    }
+
+    protected function importDatabaseFile($db_name) {
+        $success = false;
+        if (request()->isMethod('post')) {
+            request()->validate(['file' => 'required|mimetypes:application/octet-stream,application/x-sql' ]); 
+            $file =  request()->file('file');
+            $ext = $file->getClientOriginalExtension();
+            $this->dropAllTables($db_name);
+            if($ext == 'sql'){
+                exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file.' 2>&1'  ,$output);
+            }
+            exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file.' 2>&1'  ,$output);
+            $success = true;
+        }
+        return view('import_file', compact('db_name','success'));
     }
 
     protected function dropAllTables($db_name) {
