@@ -127,9 +127,7 @@ class HomeController extends Controller
         $this->grantDbConnectPermission($db_name, $database['username']);
         
         $conn = $this->swicthDatabase($db_name,$owner['username'],$owner['password']);
-        $conn->select("GRANT USAGE ON SCHEMA public TO ".$database['username'].";"); 
-        $conn->select("GRANT SELECT ON ALL TABLES IN SCHEMA public TO ".$database['username'].";"); 
-        $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ".$database['username'].";"); 
+        $this->grantReadOnlyUserPrivileges($conn,$database['username']); 
         $this->closeTempConection();
 
         $database['database_list_id'] = $db_id;
@@ -148,42 +146,37 @@ class HomeController extends Controller
     }
 
     protected function dropDatabase($db_name) {
-
         $database_result = DbList::whereName($db_name)->with('DbUser')->first();
-
         $user_ids = [];
         $dbUsers = ObjectToArray($database_result->DbUser);
-
         if(count($dbUsers)){
             foreach ($dbUsers as $key => $value) {
-                 if($value['user_type'] == 'user'){
+                if($value['user_type'] == 'user'){
                     $owner['username'] = $value['username'];
                     $owner['password'] = $value['password'];
                 }
             }
-            
             rsort($dbUsers);
-
             foreach ($dbUsers as $key => $value) {
                 if($value['user_type'] == 'readonly'){
                     $conn = $this->swicthDatabase($db_name,$owner['username'],$owner['password']);
                     $this->revokeReadOnlyUserPrivileges($conn, $value['username']);
                     $this->closeTempConection();
                 }
-                
                 DB::statement("REVOKE ALL PRIVILEGES ON DATABASE ".$db_name." FROM ".$value['username']);
-                
                 $this->dropUser($db_name,$value['username']);
-               
                 DbUser::destroy($value['id']);
             }
         }
-       
         $this->dropDb($db_name);
-
         DbList::where('name', $db_name)->delete();
-
         return redirect()->route('home');
+    }
+
+    protected function grantReadOnlyUserPrivileges($conn, $username) {
+        $conn->select("GRANT USAGE ON SCHEMA public TO ".$username.";"); 
+        $conn->select("GRANT SELECT ON ALL TABLES IN SCHEMA public TO ".$username.";"); 
+        $conn->select("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ".$username.";");  
     }
 
     protected function revokeReadOnlyUserPrivileges($conn, $username) {
@@ -305,6 +298,12 @@ class HomeController extends Controller
     }
 
     protected function importDatabaseFile($db_name) {
+
+        $db_user = DbList::where('name', $db_name)->with('dbUser')->firstOrFail();
+        $_db_users = [];
+        foreach ($db_user->dbUser  as $key => $value) {
+            $_db_users[$value->user_type] = $value;
+        }
         $success = false;
         if (request()->isMethod('post')) {
             request()->validate(['file' => 'required|mimetypes:application/octet-stream,application/x-sql' ]); 
@@ -316,6 +315,17 @@ class HomeController extends Controller
             }
             exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$file.' 2>&1'  ,$output);
             $success = true;
+            foreach ($_db_users  as $key => $value) {
+                if ($value->user_type == 'readonly') {
+                    $conn = $this->swicthDatabase($db_name);
+                    $this->grantReadOnlyUserPrivileges($conn,$value->username); 
+                    $this->closeTempConection();
+                }else{
+                    $conn = $this->swicthDatabase($db_name);
+                    $conn->select("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ".$value->username.";"); 
+                    $this->closeTempConection();
+                }
+            }
         }
         return view('import_file', compact('db_name','success'));
     }
