@@ -2,12 +2,13 @@
 $logFile = $log_file_url; // local path to log file
 
 
-$interval = 1000; //how often it checks the log file for changes, min 100
+$interval = 10000; //how often it checks the log file for changes, min 100
 $textColor = ""; //use CSS color
 
 // Don't have to change anything bellow
 if(!$textColor) $textColor = "white";
-if($interval < 100)  $interval = 100; 
+if($interval < 100)  $interval = 100;
+
 if(isset($_GET['getLog'])){
   echo file_get_contents($logFile);
 
