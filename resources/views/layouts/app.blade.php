@@ -39,6 +39,17 @@
                                 <a class="nav-link" href="{{ route('home') }}">Home</a>
                             </li>
                             <li class="nav-item">
+                               <a class="nav-link" href="{{ url('/logs') }}">Logs</a>
+                           </li>
+
+                           <li class="nav-item">
+                               <a class="nav-link" target="_blank" href="{{ url('/db/reports') }}">Database Reports</a>
+                           </li>
+
+                           <li class="nav-item">
+                               <a class="nav-link" target="_blank" href="{{ url('/db/logs') }}">Postgres Logs</a>
+                           </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('create_database') }}">Create Database</a>
                             </li>
 
