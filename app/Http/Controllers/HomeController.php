@@ -347,7 +347,7 @@ class HomeController extends Controller
     }
 
     protected function backupDatabaseCron() {
-        dd('complete');
+        dd('die');
     }
 
     protected function backupInterval($db) {
