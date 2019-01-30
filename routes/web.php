@@ -23,7 +23,7 @@ Route::post('/2fa', function () {
 
 Route::get('/complete-registration', 'Auth\RegisterController@completeRegistration');
 
-//Route::get('/register', 'Auth\RegisterController@disableRegistration')->name('disableRegistration');
+Route::get('/register', 'Auth\RegisterController@disableRegistration')->name('disableRegistration');
 
 Route::get('/home', 'HomeController@index')->name('home');
 
