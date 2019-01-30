@@ -33,7 +33,12 @@ class Kernel extends ConsoleKernel
 
         $database_list = DbList::where('backp_time','>',0)->get();
         foreach ($database_list as $key => $db) {
-            $schedule->job(new RunDatabaseBackup($db))->cron('*/'.$db->backp_time.' * * * *');
+            $min = $hours = $db->backp_time;
+            if($db->backup_type == 1){
+                $schedule->job(new RunDatabaseBackup($db))->cron('0 */'.$hours.' * * *');
+            }else{
+                $schedule->job(new RunDatabaseBackup($db))->cron('*/'.$min.' * * * *');
+            }
         }
     }
 

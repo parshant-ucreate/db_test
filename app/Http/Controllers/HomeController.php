@@ -23,7 +23,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware(['auth', '2fa']);
     }
 
     /**
@@ -274,27 +274,31 @@ class HomeController extends Controller
     }
 
     protected function importDatabase($db_name) {
+        $database = DbList::where('name', $db_name)->with('dbBackup')->firstOrFail();
         $success = false;
         if (request()->isMethod('post')) {
             request()->validate(['url' => 'required|url' ]); 
             $filename = last(explode('/', request()->url));
-            $ext = last(explode('.', $filename));
-            $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
-            $exists = Storage::disk('s3')->exists($url);
-            if($exists){
-                $file =  Storage::disk('s3')->get($url);
-                Storage::append($filename, $file);
-                $path = Storage::path($filename);
-                $this->dropAllTables($db_name);
-                if($ext == 'sql'){
-                    exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+            if(DbBackup::backupExist($filename)){
+                $ext = last(explode('.', $filename));
+                $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
+                $exists = Storage::disk('s3')->exists($url);
+                if($exists){
+                    $file =  Storage::disk('s3')->get($url);
+                    Storage::append($filename, $file);
+                    $path = Storage::path($filename);
+                    $this->dropAllTables($db_name);
+                    if($ext == 'sql'){
+                        exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+                    }
+                    exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+                    Storage::delete($filename);
+                    $success = true;
                 }
-                exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
-                Storage::delete($filename);
-                $success = true;
             }
+            return Redirect::back()->withErrors(['url' => 'Invalid url'])->withInput();
         }
-        return view('import_database', compact('db_name','success'));
+        return view('import_database', compact('db_name','success','database'));
     }
 
     protected function importDatabaseFile($db_name) {
@@ -353,8 +357,19 @@ class HomeController extends Controller
     protected function backupInterval($db) {
         $dbdetails = DbList::findOrFail($db);
         if (request()->isMethod('post')) {
-            request()->validate([ 'backp_time' => 'required|numeric|min:0' ]);
+            request()->validate([ 
+                'backp_time' => 'required|numeric|min:0|max:59',
+                'backup_type' => 'required',
+            ]);
+
+            if(request()->backup_type){
+                if(request()->backp_time > 23){
+                    return Redirect::back()->withErrors(['backp_time' => 'In hourly backup interval must be betwwen 0 - 23'])->withInput(); 
+                }
+            }
+
             $dbdetails->backp_time = request()->backp_time;
+            $dbdetails->backup_type = request()->backup_type;
             $dbdetails->save();
             return redirect()->route('db_details',$dbdetails->name); 
         }
@@ -364,5 +379,22 @@ class HomeController extends Controller
     public function getDbReports() {
         $db_reports_html = file_get_contents(public_path().'/db_logs.html');
         return view('db_reports', compact('db_reports_html'));     
+    }
+
+    public function deleteDatabaseBackup($db_name,$id) {
+       DbBackup::find($id)->delete();
+       return redirect()->route('import_database',$db_name);
+    }
+
+    public function downloadBackup($filename)
+    {   
+        $record = DbBackup::whereFilename($filename)->with('Db')->firstOrFail();
+        $filepath = $record->Db->name.'/'.$filename;
+        $mimetype =  Storage::disk('s3')->getDriver()->getMimetype($filepath); 
+        $headers = [
+          'Content-Type'        => $mimetype,            
+          'Content-Disposition' => 'attachment; filename="'. $filename .'"',
+        ];
+        return \Response::make(Storage::disk('s3')->get($filepath), 200, $headers);
     }
 }

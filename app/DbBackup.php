@@ -25,4 +25,12 @@ class DbBackup extends Model
     protected $hidden = [
         'created_at', 'updated_at',
     ];
+
+    public function Db() {
+        return $this->belongsTo('App\DbList', 'database_list_id')->select(['id', 'name']);
+    }
+
+    public static function backupExist($filename) {
+        return static::whereFilename($filename)->first();
+    }
 }

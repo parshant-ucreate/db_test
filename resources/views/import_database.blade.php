@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             @if ($success)
                 <div class="alert alert-success alert-dismissable">
                     Databse Restore Successfuly! 
@@ -37,13 +37,49 @@
                                 <button type="submit" class="btn btn-primary">
                                     {{ __('Restore Database') }}
                                 </button>
-
                             </div>
                         </div>
                     </form>
+                    <hr>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($database->dbBackup as $k => $val)
+                            <tr>
+                                <td>{{ $k + 1 }}</td>
+                                <td>{{ $val->filename }}</td>
+                                <td>{{ ucfirst($val->type) }}</td>
+                                <td>{{ $val->created_at }}</td>
+                                <td>
+                                    <form style="float:left;padding-right:3px" method="POST" action="{{url('/'.$db_name.'/import/'.$val->id)}}">
+                                        @method('DELETE')
+                                        @csrf
+                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete?')" type="submit">Delete</button>
+                                    </form>
+                                    <a class="btn btn-sm btn-primary" href="{{ url('/download_backup/'.$val->filename) }}">Download</a>
+                                    <button class="btn btn-sm btn-default" type="button" onclick="copy_url('{{ $val->filename }}')" >Copy Url</button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    function copy_url(file) {
+        var bucket_url = '{!! env('BUCKET_URL').$db_name.'/' !!}' + file;
+        $('#url').val(bucket_url);
+    }
+</script>
 @endsection
