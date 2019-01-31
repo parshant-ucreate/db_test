@@ -34,7 +34,7 @@ class DbList extends Model
     }
 
     public function dbBackup() {
-        return $this->hasMany('App\DbBackup', 'database_list_id', 'id')->select(['id', 'database_list_id', 'filename', 'type','created_at']);
+        return $this->hasMany('App\DbBackup', 'database_list_id', 'id')->where('type', '!=', 'restore')->select(['id', 'database_list_id', 'filename', 'type','created_at']);
     }
 
     public static function isDbExists($db_name) {

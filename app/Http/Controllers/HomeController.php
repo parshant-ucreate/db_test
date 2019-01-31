@@ -11,6 +11,7 @@ use Config;
 use App\DbList;
 use App\DbUser;
 use App\DbBackup;
+use App\DbRestorePoints;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\RunDatabaseBackup;
 
@@ -274,16 +275,18 @@ class HomeController extends Controller
     }
 
     protected function importDatabase($db_name) {
-        $database = DbList::where('name', $db_name)->with('dbBackup')->firstOrFail();
+        $database = DbList::whereName($db_name)->with('dbBackup')->firstOrFail();
         $success = false;
         if (request()->isMethod('post')) {
             request()->validate(['url' => 'required|url' ]); 
             $filename = last(explode('/', request()->url));
-            if(DbBackup::backupExist($filename)){
+            $db_backup = DbBackup::backupExist($filename);
+            if($db_backup){
                 $ext = last(explode('.', $filename));
                 $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
                 $exists = Storage::disk('s3')->exists($url);
                 if($exists){
+                    RunDatabaseBackup::dispatch($database,'restore',$db_backup->id);
                     $file =  Storage::disk('s3')->get($url);
                     Storage::append($filename, $file);
                     $path = Storage::path($filename);
@@ -294,6 +297,7 @@ class HomeController extends Controller
                     exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
                     Storage::delete($filename);
                     $success = true;
+                    return view('import_database', compact('db_name','success','database'));
                 }
             }
             return Redirect::back()->withErrors(['url' => 'Invalid url'])->withInput();

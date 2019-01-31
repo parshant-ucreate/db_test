@@ -17,7 +17,7 @@ class CreateDbBackupTable extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('database_list_id');
             $table->string('filename');
-            $table->string('type');  // auto|manual
+            $table->string('type');  // auto|manual|restore
             $table->timestamps();
             $table->foreign('database_list_id')->references('id')->on('database_list');
         });

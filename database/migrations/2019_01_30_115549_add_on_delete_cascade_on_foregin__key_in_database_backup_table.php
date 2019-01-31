@@ -15,7 +15,7 @@ class AddOnDeleteCascadeOnForeginKeyInDatabaseBackupTable extends Migration
     {
         Schema::table('db_backup', function (Blueprint $table) {
             $table->dropForeign('db_backup_database_list_id_foreign');
-            $table->foreign('database_list_id')->references('id')->on('database_list')->onDelete('cascade');;
+            $table->foreign('database_list_id')->references('id')->on('database_list')->onDelete('cascade');
         });
     }
 

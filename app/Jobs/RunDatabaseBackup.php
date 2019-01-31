@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\DbList;
 use App\DbBackup;
+use App\DbRestorePoints;
 use Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,16 +19,18 @@ class RunDatabaseBackup implements ShouldQueue
 
     public $db = '';
     public $type = '';
+    public $db_backup_id = '';
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(DbList $db , $type = 'auto')
+    public function __construct(DbList $db , $type = 'auto', $db_backup_id = null )
     {
         $this->db = $db;
         $this->type = $type;
+        $this->db_backup_id = $db_backup_id;
     }
 
     /**
@@ -45,11 +48,19 @@ class RunDatabaseBackup implements ShouldQueue
         Log::info('Dump Staring for '.$this->db->name);
         
         $fileName = $this->db->name.'_'.time().'.dump';
-       
+        
         exec('pg_dump -b -F c --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$this->db->name.' > db_backup/'.$fileName .' 2>&1' ,$output);
          
         //save in to local database
-        DbBackup::create(['filename' => $fileName, 'database_list_id' => $this->db->id, 'type' => $this->type ]);
+        $backup = DbBackup::create(['filename' => $fileName, 'database_list_id' => $this->db->id, 'type' => $this->type ]);
+
+        if($this->db_backup_id){
+            DbRestorePoints::create([
+                                'database_list_id' => $this->db->id,
+                                'db_backup_id' => $this->db_backup_id,
+                                'restore_point_id' => $backup->id,
+                            ]);
+        }
 
         //Move to S3
         $s3 = Storage::disk('s3');
