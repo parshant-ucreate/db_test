@@ -58,7 +58,7 @@ class HomeController extends Controller
     public function createDatabase() {
         if (request()->isMethod('post')) {
             $validator = Validator::make(request()->all(), [
-                'name' => 'required|alpha_num'
+                'name' => 'required|alpha_num|unique:database_list'
             ]);
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput();
