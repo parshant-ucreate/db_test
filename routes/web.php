@@ -35,6 +35,9 @@ Route::get('{db_name}/backup', 'HomeController@backupDatabase')->name('backup_da
 Route::match(['get','post'],'{db_name}/import', 'HomeController@importDatabase')->name('import_database');
 
 Route::delete('{db_name}/import/{id}', 'HomeController@deleteDatabaseBackup');
+
+Route::get('/rollback_database/{id}', 'HomeController@rollbackDatabase')->name('rollback_database');
+
 Route::get('/download_backup/{filename}', 'HomeController@downloadBackup');
 
 Route::match(['get','post'],'{db_name}/import_file', 'HomeController@importDatabaseFile')->name('import_file');

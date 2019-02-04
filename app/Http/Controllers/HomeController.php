@@ -150,6 +150,7 @@ class HomeController extends Controller
         $database_result = DbList::whereName($db_name)->with('DbUser')->first();
         $user_ids = [];
         $dbUsers = ObjectToArray($database_result->DbUser);
+        $this->dropExtensions($db_name);
         if(count($dbUsers)){
             foreach ($dbUsers as $key => $value) {
                 if($value['user_type'] == 'user'){
@@ -174,6 +175,12 @@ class HomeController extends Controller
         return redirect()->route('home');
     }
 
+    protected function dropExtensions($db_name){
+        $conn = $this->swicthDatabase($db_name);
+        $conn->statement('DROP EXTENSION IF EXISTS pg_stat_statements');
+        $this->closeTempConection();
+    }
+    
     protected function grantReadOnlyUserPrivileges($conn, $username) {
         $conn->select("GRANT USAGE ON SCHEMA public TO ".$username.";"); 
         $conn->select("GRANT SELECT ON ALL TABLES IN SCHEMA public TO ".$username.";"); 
@@ -275,34 +282,44 @@ class HomeController extends Controller
     }
 
     protected function importDatabase($db_name) {
-        $database = DbList::whereName($db_name)->with('dbBackup')->firstOrFail();
+        $database = DbList::whereName($db_name)->with(['dbBackup','dbRestorePoints'])->firstOrFail();
         $success = false;
         if (request()->isMethod('post')) {
-            request()->validate(['url' => 'required|url' ]); 
+            request()->validate(['url' => 'required|url' ]);
             $filename = last(explode('/', request()->url));
-            $db_backup = DbBackup::backupExist($filename);
-            if($db_backup){
-                $ext = last(explode('.', $filename));
-                $url = implode('/', array_slice(explode('/', request()->url), -2, 2, true));
-                $exists = Storage::disk('s3')->exists($url);
-                if($exists){
-                    RunDatabaseBackup::dispatch($database,'restore',$db_backup->id);
-                    $file =  Storage::disk('s3')->get($url);
-                    Storage::append($filename, $file);
-                    $path = Storage::path($filename);
-                    $this->dropAllTables($db_name);
-                    if($ext == 'sql'){
-                        exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
-                    }
-                    exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
-                    Storage::delete($filename);
-                    $success = true;
-                    return view('import_database', compact('db_name','success','database'));
-                }
-            }
-            return Redirect::back()->withErrors(['url' => 'Invalid url'])->withInput();
+            $success = $this->restoreDatabase($database,$db_name,$filename);
         }
         return view('import_database', compact('db_name','success','database'));
+    }
+
+    public function restoreDatabase($database,$db_name,$filename){
+        $db_backup = DbBackup::backupExist($filename);
+        if(!$db_backup){
+            return Redirect::back()->withErrors(['url' => 'Invalid url'])->withInput();
+        }
+        $ext = last(explode('.', $filename));
+        $url = $db_name.'/'.$filename;
+        $exists = Storage::disk('s3')->exists($url);
+        if(!$exists){
+            return Redirect::back()->withErrors(['url' => 'Invalid url'])->withInput();
+        }
+        RunDatabaseBackup::dispatch($database,'restore',$db_backup->id);
+        $file =  Storage::disk('s3')->get($url);
+        Storage::append($filename, $file);
+        $path = Storage::path($filename);
+        $this->dropAllTables($db_name);
+        if($ext == 'sql'){
+            exec('psql --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+        }
+        exec('pg_restore --dbname=postgresql://'.getenv('DB_USERNAME').':'.getenv('DB_PASSWORD').'@'.getenv('DB_HOST').':'.getenv('DB_PORT').'/'.$db_name.' < '.$path.' 2>&1'  ,$output);
+        Storage::delete($filename);
+        return true;
+    }
+
+    protected function rollbackDatabase($restore_point_id) {
+        $restore_point = DbBackup::with('Db')->find($restore_point_id);
+        $success = $this->restoreDatabase($restore_point->Db,$restore_point->Db->name,$restore_point->filename);
+        return redirect()->route('import_database',$restore_point->Db->name);
     }
 
     protected function importDatabaseFile($db_name) {
@@ -331,6 +348,9 @@ class HomeController extends Controller
                 }else{
                     $conn = $this->swicthDatabase($db_name);
                     $conn->select("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ".$value->username.";"); 
+                    if($value->user_type == 'user'){
+                        $this->changeDatabaseTablesOwner($conn,$value->username);
+                    }
                     $this->closeTempConection();
                 }
             }
@@ -355,7 +375,14 @@ class HomeController extends Controller
     }
 
     protected function backupDatabaseCron() {
-        dd('die');
+       abort(404);
+    }
+
+    protected function changeDatabaseTablesOwner($conn,$username){
+        $commands = $conn->select("SELECT 'ALTER TABLE ' || table_name || ' OWNER TO ".$username.";' as query from information_schema.tables where table_schema = 'public'"); 
+        foreach ($commands as $key => $value) {
+            $conn->statement($value->query);
+        }
     }
 
     protected function backupInterval($db) {

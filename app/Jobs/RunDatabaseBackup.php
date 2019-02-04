@@ -65,7 +65,7 @@ class RunDatabaseBackup implements ShouldQueue
         //Move to S3
         $s3 = Storage::disk('s3');
         $filePath = $this->db->name.'/' . $fileName;
-        $res = $s3->put($filePath, file_get_contents('db_backup/'.$fileName));
+        $res = $s3->put($filePath, fopen('db_backup/'.$fileName, 'r+'));
 
         //remove file from server
         unlink('db_backup/'.$fileName);
