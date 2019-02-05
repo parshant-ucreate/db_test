@@ -10,3 +10,10 @@ UDS is a platform to manage **Postgresql** services e.g ( manage users, database
 
 ## Setup
  - [How to install project on local](https://github.com/parshant-ucreate/db_test/wiki/Setup)
+
+## Server Requirements
+ - 512 Mb RAM ( minimum )
+ - PHP ( >= 7.1.3  )
+ - Postgress
+ - crontab
+ - PG-badger
