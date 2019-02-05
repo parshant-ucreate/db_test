@@ -8,7 +8,7 @@ UDS is a platform to manage **Postgresql** services e.g ( manage users, database
 - Framework: Laravel ( >= 5.7 )
 - Database: PostgreSql
 
-## Server Requirements
+## [Server Requirements](https://github.com/parshant-ucreate/db_test/wiki/Server-Requirements)
  - 512 Mb RAM ( minimum )
  - PHP ( >= 7.1.3  )
  - [Postgress](https://www.postgresql.org/docs/10/index.html)
