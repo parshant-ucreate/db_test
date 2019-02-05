@@ -362,7 +362,7 @@ class HomeController extends Controller
         $tables = $this->selectAllTables($db_name);
         $conn = $this->swicthDatabase($db_name);
         if(count($tables)){
-            $conn->select("DROP TABLE ".implode(',',$tables)." CASCADE");
+            $conn->select('DROP TABLE  "'.implode('","',$tables).'" CASCADE');
         }
         $this->closeTempConection();
     }
@@ -375,11 +375,18 @@ class HomeController extends Controller
     }
 
     protected function backupDatabaseCron() {
+        $db_name = 'openmind';
+        $tables = $this->selectAllTables($db_name);
+        $conn = $this->swicthDatabase($db_name);
+        if(count($tables)){
+            //dd('DROP TABLE  "'.implode('","',$tables).'" CASCADE');
+        }
+        $this->closeTempConection();
        abort(404);
     }
 
     protected function changeDatabaseTablesOwner($conn,$username){
-        $commands = $conn->select("SELECT 'ALTER TABLE ' || table_name || ' OWNER TO ".$username.";' as query from information_schema.tables where table_schema = 'public'"); 
+        $commands = $conn->select("SELECT 'ALTER TABLE public.' || table_name || ' OWNER TO ".$username.";' as query from information_schema.tables where table_schema = 'public'"); 
         foreach ($commands as $key => $value) {
             $conn->statement($value->query);
         }
