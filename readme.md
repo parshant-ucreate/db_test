@@ -9,4 +9,4 @@ UDS is a platform to manage **Postgresql** services e.g ( manage users, database
 - Database: PostgreSql
 
 ## Setup
- - [[How to install project on local|Setup]]
+ - [How to install project on local](https://github.com/parshant-ucreate/db_test/wiki/Setup)
