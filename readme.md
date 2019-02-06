@@ -4,7 +4,7 @@ UDS is a platform to manage **Postgresql** services e.g ( manage users, database
 
 ## About Project
 
-- Language: [PHP]((https://www.php.net)) ( >= 7.1.3)
+- Language: [PHP](https://www.php.net) ( >= 7.1.3)
 - Framework: Laravel ( >= 5.7 )
 - Database: PostgreSql
 
