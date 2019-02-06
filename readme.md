@@ -4,13 +4,13 @@ UDS is a platform to manage **PostgreSQL** services e.g ( manage users, database
 
 ## About Project
 
-- Language: PHP ( >= 7.1.3)
+- Language: PHP (7.3)
 - Framework: Laravel ( >= 5.7 )
 - Database: PostgreSQL
 
 ## [Server Requirements](https://github.com/parshant-ucreate/db_test/wiki/Server-Requirements)
  - 512 Mb RAM ( minimum )
- - [PHP](https://www.php.net) ( >= 7.1.3  )
+ - [PHP](https://www.php.net) ( 7.3 )
  - [PostgreSQL](https://www.postgresql.org/docs/10/index.html)
  - [crontab](https://help.ubuntu.com/community/CronHowto)
  - [pgBadger](http://pgbadger.darold.net/#download)
