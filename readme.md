@@ -1,4 +1,4 @@
-# U-create Database Services ( UDS )
+# ucreate Database Services ( UDS )
 
 UDS is a platform to manage **Postgresql** services e.g ( manage users, database).
 
